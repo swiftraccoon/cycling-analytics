@@ -1,17 +1,42 @@
 # Cycling Analytics Platform
 
-Analyzes cycling performance data from Intervals.icu and Garmin Connect with machine learning predictions and interactive visualizations. Supports detailed FIT file analysis for second-by-second data.
+**Status: Work in Progress**
 
-## Features
+A data pipeline and analysis platform for cycling performance data from Intervals.icu and Garmin Connect.
 
-- Direct Intervals.icu API sync with incremental updates
-- Garmin Connect sync with FIT file downloads for detailed analysis
-- Second-by-second data analysis from FIT files (power, HR, cadence, etc.)
-- Performance analytics: FTP progression, training load (CTL/ATL/TSB), power zones
-- ML predictions for FTP progression and race performance
-- Interactive Streamlit dashboard with charts and heatmaps
-- Data export to Excel and CSV
-- Automatic deduplication and data integrity preservation
+## Current State
+
+### Working
+- CSV import from Intervals.icu exports
+- Garmin Connect sync with FIT file downloads
+- Basic data deduplication
+- SQLite database storage
+
+### Partially Working
+- Streamlit dashboard - FTP progression and power zones display data but other graphs may be broken
+- Dashboard has compatibility issues between Intervals.icu and Garmin data sources
+- ML predictions - training runs but predictions have errors
+
+### Not Tested/Unknown Status
+- Intervals.icu API sync
+- Excel/CSV export
+- Data validation integrity
+- CTL/ATL/TSB calculations
+
+## Known Issues
+- Dashboard graphs need comprehensive testing and fixes
+- ML predictions fail with "selected_feature_names is not defined" error
+- Dashboard was showing only 8 FTP points instead of all 66 (recently fixed)
+- Power zones were looking for HR data instead of power data (recently fixed)
+- No automated tests for dashboard functionality
+
+## TODO
+- Create comprehensive test suite for all dashboard graphs
+- Fix remaining dashboard compatibility issues
+- Fix ML prediction errors
+- Add proper error handling throughout
+- Test and validate all CLI commands
+- Add integration tests for data pipeline
 
 ## Installation
 
@@ -20,8 +45,10 @@ Analyzes cycling performance data from Intervals.icu and Garmin Connect with mac
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone and setup
-git clone https://github.com/swiftraccoon/cycling.git
-cd cycling
+git clone https://github.com/swiftraccoon/cycling-analytics.git
+cd cycling-analytics
+git submodule init
+git submodule update
 uv venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 uv pip install -e .
