@@ -1,0 +1,1 @@
+"""Data models for cycling analytics."""

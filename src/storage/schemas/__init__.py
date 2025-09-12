@@ -1,0 +1,1 @@
+"""Database schema definitions for cycling analytics."""

@@ -1,0 +1,85 @@
+[project]
+name = "cycling-analytics"
+version = "0.1.0"
+description = "Cycling performance analytics platform for Intervals.icu data"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "polars>=0.20.0",
+    "pandas>=2.2.0",
+    "numpy>=1.26.0",
+    "scikit-learn>=1.4.0",
+    "xgboost>=2.0.0",
+    "lightgbm>=4.0.0",
+    "plotly>=5.18.0",
+    "streamlit>=1.31.0",
+    "sqlalchemy>=2.0.0",
+    "pydantic>=2.5.0",
+    "click>=8.1.0",
+    "rich>=13.7.0",
+    "python-dateutil>=2.8.0",
+    "pytz>=2024.1",
+    "adbc-driver-sqlite>=0.8.0",
+    "openpyxl>=3.1.0",
+    "scipy>=1.11.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=24.0.0",
+    "ruff>=0.2.0",
+    "mypy>=1.8.0",
+    "pre-commit>=3.6.0",
+]
+ml = [
+    "mlflow>=2.10.0",
+    "optuna>=3.5.0",
+]
+
+[project.scripts]
+cycling = "src.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "N", "W", "B", "C90", "D"]
+ignore = ["D100", "D104"]
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/test_*.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

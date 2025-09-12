@@ -1,0 +1,1 @@
+"""Streamlit dashboard application for cycling analytics."""

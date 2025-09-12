@@ -1,0 +1,65 @@
+# Environment variables - NEVER commit these!
+.env
+.env.local
+.env.*.local
+
+# Data directories - contains personal cycling data
+data/bronze/archive/*
+data/bronze/incoming/*
+data/bronze/fit_files/*
+data/bronze/*.parquet
+data/silver/archive/*
+data/silver/incoming/*
+data/gold/archive/*
+data/gold/incoming/*
+data/cycling_analytics.db
+data/garmin_sync_state.json
+
+# Garmin OAuth tokens
+.garminconnect/
+~/.garminconnect
+
+# IDE and tools
+.claude
+openapi-spec.json
+
+# Documentation (except main README)
+docs/
+PROJECT_PLAN.md
+*.md
+!README.md
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# FIT files (can be large)
+*.fit
+
+# Reports and exports - may contain personal data
+*.xlsx
+*.csv
+reports/
+
+# Log files - may contain personal paths and data
+*.log
+garmin-import.log
+dashboard_output.txt
+
+.pytest_cache
+.coverage
