@@ -141,6 +141,9 @@ def test_column_filtering(temp_db):
         "id": ["act1"],
         "start_date_local": [datetime.now()],
         "name": ["Test Ride"],
+        "type": ["Ride"],
+        "moving_time": [3600.0],
+        "distance": [30000.0],
         "invalid_column": ["should_be_filtered"],
         "another_invalid": [123],
     })

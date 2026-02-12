@@ -132,7 +132,7 @@ class PerformanceAnalyzer:
             if ftp_progression.is_empty():
                 logger.warning("No FTP data found for power zones")
                 return {}
-            ftp = ftp_progression['ftp_value'].tail(1).item()
+            ftp = float(ftp_progression['ftp_value'].tail(1).item())
         
         # Calculate zone boundaries for display
         zones = {
@@ -148,18 +148,27 @@ class PerformanceAnalyzer:
         # Calculate power zone time distribution from activities
         zone_times = {}
         
-        # Filter activities with power data
-        power_activities = self.df.filter(pl.col("avg_power").is_not_null())
+        # Filter activities with power data - try multiple column names
+        power_col = None
+        for col_name in ["avg_power", "icu_average_watts", "average_power"]:
+            if col_name in self.df.columns:
+                power_col = col_name
+                break
+
+        if power_col is None:
+            power_activities = pl.DataFrame()
+        else:
+            power_activities = self.df.filter(pl.col(power_col).is_not_null())
         
-        if not power_activities.is_empty():
+        if not power_activities.is_empty() and power_col is not None:
             # Calculate time spent in each zone based on average power and duration
             for zone_num, (low, high) in enumerate(zones.values(), 1):
                 # Find activities where avg power falls in this zone
                 if high == float('inf'):
-                    in_zone = power_activities.filter(pl.col("avg_power") >= low)
+                    in_zone = power_activities.filter(pl.col(power_col) >= low)
                 else:
                     in_zone = power_activities.filter(
-                        (pl.col("avg_power") >= low) & (pl.col("avg_power") < high)
+                        (pl.col(power_col) >= low) & (pl.col(power_col) < high)
                     )
                 
                 if not in_zone.is_empty():

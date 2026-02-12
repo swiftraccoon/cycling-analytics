@@ -28,39 +28,48 @@ class TestGarminDataPipeline(unittest.TestCase):
         
     def test_fit_parser_extracts_all_fields(self):
         """Test that FIT parser extracts ALL available fields."""
+        try:
+            import fitparse
+        except ImportError:
+            self.skipTest("fitparse not installed")
+
         # Use a real FIT file if available
         fit_path = Path("data/bronze/fit_files")
-        if fit_path.exists():
-            fit_files = list(fit_path.glob("*.fit"))
-            if fit_files:
-                # Parse first FIT file
-                fit_data = self.fit_parser.parse_fit_file(fit_files[0])
-                
-                # Check session data
-                self.assertIn('session_data', fit_data)
-                session = fit_data['session_data']
-                
-                # Critical fields that must be present
-                critical_fields = [
-                    'threshold_power',  # FTP
-                    'avg_cadence',
-                    'avg_temperature',
-                    'normalized_power',
-                    'training_stress_score',
-                    'intensity_factor'
-                ]
-                
-                for field in critical_fields:
-                    if field in session:
-                        print(f"✅ {field}: {session[field]}")
-                    else:
-                        print(f"⚠️  {field}: Missing")
-                
-                # Check device info
-                self.assertIn('device_info', fit_data)
-                
-                # Check lap data
-                self.assertIn('lap_data', fit_data)
+        if not fit_path.exists():
+            self.skipTest("No FIT files directory found")
+
+        fit_files = list(fit_path.glob("*.fit"))
+        if not fit_files:
+            self.skipTest("No FIT files found")
+
+        # Parse first FIT file
+        fit_data = self.fit_parser.parse_fit_file(fit_files[0])
+
+        # Check session data
+        self.assertIn('session_data', fit_data)
+        session = fit_data['session_data']
+
+        # Critical fields that must be present
+        critical_fields = [
+            'threshold_power',  # FTP
+            'avg_cadence',
+            'avg_temperature',
+            'normalized_power',
+            'training_stress_score',
+            'intensity_factor'
+        ]
+
+        for field in critical_fields:
+            if field in session:
+                print(f"  {field}: {session[field]}")
+            else:
+                print(f"  {field}: Missing")
+
+        # Check device info
+        self.assertIn('device_info', fit_data)
+
+        # Check lap data
+        self.assertIn('lap_data', fit_data)
                 
     def test_pydantic_validation_complete(self):
         """Test that Pydantic model validates ALL fields."""

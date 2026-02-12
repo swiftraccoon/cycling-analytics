@@ -196,9 +196,23 @@ class Deduplicator:
         # Initialize report
         self.deduplication_report["total_records"] = len(df)
         
+        # Guard: if 'id' column is missing, return early
+        if "id" not in df.columns:
+            logger.warning("No 'id' column found, skipping deduplication")
+            self.deduplication_report.update({
+                "total_records": len(df),
+                "unique_records": len(df),
+                "exact_duplicates": 0,
+                "potential_duplicates": 0,
+                "resolution_strategy": strategy,
+                "timestamp": datetime.now(),
+                "deduplication_time": (datetime.now() - start_time).total_seconds(),
+            })
+            return df, self.deduplication_report
+
         # Step 1: Identify exact duplicates
         df = self.identify_exact_duplicates(df)
-        
+
         # Count exact duplicates
         exact_duplicates = 0
         if "is_exact_duplicate" in df.columns:
@@ -207,14 +221,14 @@ class Deduplicator:
             # But we only count removed duplicates
             unique_ids = df["id"].n_unique() if "id" in df.columns else len(df)
             exact_duplicates = len(df) - unique_ids
-        
+
         # Step 2: Identify potential duplicates if requested
         potential_duplicates = 0
         if identify_potential:
             df = self.identify_potential_duplicates(df)
             if "is_potential_duplicate" in df.columns:
                 potential_duplicates = df.filter(pl.col("is_potential_duplicate")).height
-        
+
         # Step 3: Resolve duplicates
         df = self.resolve_duplicates(df, strategy=strategy, preserve_all=preserve_all)
         

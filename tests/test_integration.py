@@ -98,9 +98,13 @@ def test_continuous_update_workflow(test_data_dir, bronze_layer, sample_csv_data
     
     # Initial data load
     extractor = CSVExtractor(bronze_path=str(bronze_layer))
-    db_path = test_data_dir / "test.db"
+    db_path = test_data_dir / "update_test.db"
     db = DatabaseManager(db_path=str(db_path))
-    
+
+    # Clean incoming directory to avoid interference from other tests
+    for f in (bronze_layer / "incoming").glob("*.csv"):
+        f.unlink()
+
     # First batch of activities
     batch1 = sample_csv_data.head(10)
     csv_file1 = bronze_layer / "incoming" / "batch1.csv"

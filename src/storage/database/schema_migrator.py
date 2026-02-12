@@ -2,7 +2,7 @@
 
 import logging
 from typing import Set, Dict, Any
-from sqlalchemy import text
+from sqlalchemy import text, create_engine
 from sqlalchemy.engine import Engine
 import polars as pl
 
@@ -113,14 +113,66 @@ class SchemaMigrator:
         # Default to TEXT
         return "TEXT"
     
-    def __init__(self, engine: Engine):
-        """Initialize migrator with database engine.
-        
+    def __init__(self, engine_or_path):
+        """Initialize migrator with database engine or path.
+
         Args:
-            engine: SQLAlchemy engine
+            engine_or_path: SQLAlchemy engine or string path to database
         """
-        self.engine = engine
+        if isinstance(engine_or_path, str):
+            from pathlib import Path
+            db_path = Path(engine_or_path)
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+            self.engine = create_engine(f"sqlite:///{db_path}")
+        else:
+            self.engine = engine_or_path
     
+    def run_migrations(self) -> Dict[str, Any]:
+        """Create the database schema and run all migrations.
+
+        Returns:
+            Migration statistics
+        """
+        # Create activities table
+        with self.engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS activities (
+                    id TEXT PRIMARY KEY,
+                    start_date_local TIMESTAMP,
+                    start_date TIMESTAMP,
+                    icu_sync_date TIMESTAMP,
+                    name TEXT,
+                    type TEXT,
+                    gear TEXT,
+                    description TEXT,
+                    moving_time REAL,
+                    distance REAL,
+                    elapsed_time REAL,
+                    total_elevation_gain REAL,
+                    max_speed REAL,
+                    average_speed REAL,
+                    has_heartrate BOOLEAN,
+                    max_heartrate INTEGER,
+                    average_heartrate INTEGER,
+                    device_watts BOOLEAN,
+                    icu_average_watts REAL,
+                    icu_normalized_watts REAL,
+                    icu_ftp INTEGER,
+                    icu_training_load REAL,
+                    icu_fitness REAL,
+                    icu_fatigue REAL,
+                    file_source TEXT,
+                    file_hash TEXT,
+                    import_timestamp TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            conn.commit()
+
+        # Run FIT column migrations
+        return self.migrate_fit_columns()
+
     def get_existing_columns(self, table_name: str) -> Set[str]:
         """Get existing columns in a table.
         

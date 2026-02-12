@@ -728,6 +728,11 @@ def prepare_calendar_data(df: pl.DataFrame) -> pl.DataFrame:
             pl.col("start_date_local").str.to_datetime()
         )
     
+    # Filter out null dates before dt operations
+    df = df.filter(pl.col("start_date_local").is_not_null())
+    if df.is_empty():
+        return pl.DataFrame()
+
     # Add week and weekday columns
     calendar_df = df.with_columns([
         pl.col("start_date_local").dt.week().alias("week"),

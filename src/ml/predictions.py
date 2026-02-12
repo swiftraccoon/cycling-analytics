@@ -75,20 +75,20 @@ class PerformancePredictor:
         # Add features only if columns exist
         if "icu_training_load" in ftp_df.columns:
             rolling_features.extend([
-                pl.col("icu_training_load").rolling_mean(7).alias("load_7d"),
-                pl.col("icu_training_load").rolling_mean(28).alias("load_28d"),
+                pl.col("icu_training_load").rolling_mean(7, min_samples=1).alias("load_7d"),
+                pl.col("icu_training_load").rolling_mean(28, min_samples=1).alias("load_28d"),
             ])
             feature_cols.extend(["load_7d", "load_28d"])
-        
+
         if "moving_time" in ftp_df.columns:
             rolling_features.extend([
-                pl.col("moving_time").rolling_sum(7).alias("time_7d"),
-                pl.col("moving_time").rolling_sum(28).alias("time_28d"),
+                pl.col("moving_time").rolling_sum(7, min_samples=1).alias("time_7d"),
+                pl.col("moving_time").rolling_sum(28, min_samples=1).alias("time_28d"),
             ])
             feature_cols.extend(["time_7d", "time_28d"])
-        
+
         if "icu_intensity" in ftp_df.columns:
-            rolling_features.append(pl.col("icu_intensity").rolling_mean(7).alias("intensity_7d"))
+            rolling_features.append(pl.col("icu_intensity").rolling_mean(7, min_samples=1).alias("intensity_7d"))
             feature_cols.append("intensity_7d")
         
         if "icu_fitness" in ftp_df.columns:
@@ -262,8 +262,8 @@ class PerformancePredictor:
             "best_model": max(model_scores, key=model_scores.get),
             "expected_gain": future_predictions[-1] - current_ftp,
             "expected_gain_percentage": ((future_predictions[-1] - current_ftp) / current_ftp) * 100,
-            "features_used": len(selected_feature_names),
-            "top_features": selected_feature_names[:5] if selected_feature_names else [],
+            "features_used": X.shape[1],
+            "top_features": [],
         }
     
     def predict_performance_readiness(self) -> Dict:
@@ -312,7 +312,7 @@ class PerformancePredictor:
                 elif tsb > 5:
                     readiness_factors["form"] = max(60, 90 - (tsb - 5) * 2)  # Too fresh
                 else:
-                    readiness_factors["form"] = max(40, 90 + tsb)  # Too fatigued
+                    readiness_factors["form"] = max(30, 70 + tsb * 2)  # Too fatigued
             else:
                 readiness_factors["form"] = 50
         
@@ -420,29 +420,31 @@ class PerformancePredictor:
         
         # Predict power output
         # Get current FTP from unified column
+        current_ftp = None
         if "ftp_value" in latest_metrics.columns:
             current_ftp = latest_metrics["ftp_value"][0]
         elif "icu_ftp" in latest_metrics.columns:
             current_ftp = latest_metrics["icu_ftp"][0]
         elif "threshold_power" in latest_metrics.columns:
             current_ftp = latest_metrics["threshold_power"][0]
-            if current_ftp:
-                # Estimate sustainable power based on duration
-                if race_duration_hours <= 1:
-                    power_factor = 0.95  # ~95% of FTP for 1 hour
-                elif race_duration_hours <= 2:
-                    power_factor = 0.90  # ~90% of FTP for 2 hours
-                elif race_duration_hours <= 3:
-                    power_factor = 0.85  # ~85% of FTP for 3 hours
-                elif race_duration_hours <= 4:
-                    power_factor = 0.80  # ~80% of FTP for 4 hours
-                else:
-                    power_factor = 0.75  # ~75% of FTP for longer
-                
-                predicted_power = current_ftp * power_factor
-                predictions["predicted_avg_power"] = predicted_power
-                predictions["current_ftp"] = current_ftp
-                predictions["power_factor"] = power_factor
+
+        if current_ftp:
+            # Estimate sustainable power based on duration
+            if race_duration_hours <= 1:
+                power_factor = 0.95  # ~95% of FTP for 1 hour
+            elif race_duration_hours <= 2:
+                power_factor = 0.90  # ~90% of FTP for 2 hours
+            elif race_duration_hours <= 3:
+                power_factor = 0.85  # ~85% of FTP for 3 hours
+            elif race_duration_hours <= 4:
+                power_factor = 0.80  # ~80% of FTP for 4 hours
+            else:
+                power_factor = 0.75  # ~75% of FTP for longer
+
+            predicted_power = current_ftp * power_factor
+            predictions["predicted_avg_power"] = predicted_power
+            predictions["current_ftp"] = current_ftp
+            predictions["power_factor"] = power_factor
         
         # Predict normalized power
         if "predicted_avg_power" in predictions:

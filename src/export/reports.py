@@ -466,9 +466,9 @@ class ReportExporter:
         
         ftp_data = self.analyzer.calculate_ftp_progression()
         if not ftp_data.is_empty():
-            latest_ftp = ftp_data["icu_ftp"].tail(1)[0]
-            first_ftp = ftp_data["icu_ftp"].head(1)[0]
-            
+            latest_ftp = float(ftp_data["ftp_value"].tail(1)[0])
+            first_ftp = float(ftp_data["ftp_value"].head(1)[0])
+
             report.append(f"Current FTP: {latest_ftp}W")
             report.append(f"Initial FTP: {first_ftp}W")
             report.append(f"Total Gain: {latest_ftp - first_ftp}W")

@@ -203,7 +203,7 @@ class DataPipelineOrchestrator:
         data_sources = []
         for result in extraction_results:
             if result.success and result.data is not None and result.metadata is not None:
-                metadata_dict = result.metadata.dict()
+                metadata_dict = result.metadata.model_dump()
                 data_sources.append((result.data, metadata_dict))
         
         if not data_sources:

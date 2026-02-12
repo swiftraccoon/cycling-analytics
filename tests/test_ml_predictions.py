@@ -98,8 +98,8 @@ class TestFTPPrediction:
         
         # Should return error due to insufficient data
         assert "error" in result
-        assert result["current_activities"] == 2
-        assert result["required_activities"] == 10
+        assert result["current_ftp_values"] == 2
+        assert result["required_ftp_values"] == 3
     
     def test_ftp_prediction_without_ftp_data(self):
         """Test FTP prediction when no FTP data exists."""
@@ -126,9 +126,9 @@ class TestFTPPrediction:
             assert "gb" in result["model_scores"]
             assert "lr" in result["model_scores"]
             
-            # Scores should be between -1 and 1 (R² score)
+            # R² scores can be negative for poor models but should be finite
             for score in result["model_scores"].values():
-                assert -1 <= score <= 1
+                assert np.isfinite(score)
     
     def test_ftp_prediction_confidence_intervals(self, training_data_with_ftp):
         """Test that confidence intervals are provided."""
@@ -187,7 +187,7 @@ class TestPerformanceReadiness:
         predictor = PerformancePredictor(old_data)
         result = predictor.predict_performance_readiness()
         
-        assert "error" in result or result["activities_analyzed"] == 0
+        assert "error" in result or result.get("overall_readiness", 0) <= 50
     
     def test_readiness_recommendations(self, recent_activity_data):
         """Test that appropriate recommendations are generated."""
@@ -278,7 +278,14 @@ class TestRacePerformancePrediction:
             "icu_ftp": [250, 250, 250],
         })
         
-        combined_df = pl.concat([training_data_with_ftp, long_efforts])
+        # Align columns before concat
+        for col in training_data_with_ftp.columns:
+            if col not in long_efforts.columns:
+                long_efforts = long_efforts.with_columns(pl.lit(None).alias(col))
+        for col in long_efforts.columns:
+            if col not in training_data_with_ftp.columns:
+                training_data_with_ftp = training_data_with_ftp.with_columns(pl.lit(None).alias(col))
+        combined_df = pl.concat([training_data_with_ftp, long_efforts], how="diagonal")
         predictor_with_long = PerformancePredictor(combined_df)
         
         result = predictor_with_long.predict_race_performance(

@@ -235,19 +235,24 @@ class StrictActivityModel(BaseModel):
                     return None
         return v
     
-    @validator('hr_zones_data', 'splits_data', pre=True)
+    @validator('hr_zones_data', 'splits_data', 'lap_data', 'zones_config', pre=True)
     def handle_json_fields(cls, v):
         """Handle JSON fields - convert to string if needed."""
-        if v is None or pd.isna(v):
+        if v is None:
             return None
         if isinstance(v, (dict, list)):
             import json
             return json.dumps(v)
+        try:
+            if pd.isna(v):
+                return None
+        except (ValueError, TypeError):
+            pass
         return str(v)
     
     def normalize(self) -> Dict[str, Any]:
         """Normalize data by consolidating duplicate fields."""
-        data = self.dict()
+        data = self.model_dump()
         
         # Consolidate time fields
         if not data.get('moving_time') and data.get('moving_duration'):

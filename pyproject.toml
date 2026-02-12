@@ -3,7 +3,7 @@ name = "cycling-analytics"
 version = "0.1.0"
 description = "Cycling performance analytics platform for Intervals.icu data"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "polars>=0.20.0",
     "pandas>=2.2.0",

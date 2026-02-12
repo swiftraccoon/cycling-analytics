@@ -286,9 +286,16 @@ class DatabaseManager:
                 # Fail if quality is too low - NO COMPROMISES ON DATA QUALITY
                 if quality_metrics['quality_score'] < 95:
                     raise ValueError(f"Data quality score {quality_metrics['quality_score']:.1f}% is UNACCEPTABLE. Minimum is 95%!")
+        except ValueError as e:
+            error_msg = str(e)
+            logger.error(f"Data validation failed: {e}")
+            # Re-raise quality enforcement errors so callers can catch them
+            if "UNACCEPTABLE" in error_msg or "CRITICAL FIELD" in error_msg or "quality score" in error_msg.lower():
+                raise ValueError(f"Cannot save invalid data: {e}")
+            return {"saved": 0, "updated": 0, "skipped": 0, "errors": error_msg}
         except Exception as e:
             logger.error(f"Data validation failed: {e}")
-            raise ValueError(f"Cannot save invalid data: {e}")
+            return {"saved": 0, "updated": 0, "skipped": 0, "errors": str(e)}
         
         # First, migrate schema to add any new columns
         migrator = SchemaMigrator(self.engine)

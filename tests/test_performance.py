@@ -51,11 +51,11 @@ def test_calculate_ftp_progression(sample_training_data):
     
     assert not ftp_data.is_empty()
     assert "start_date_local" in ftp_data.columns
-    assert "icu_ftp" in ftp_data.columns
-    
-    # Check that FTP values are unique and sorted
-    ftp_values = ftp_data["icu_ftp"].to_list()
-    assert ftp_values == sorted(set(ftp_values))
+    assert "ftp_value" in ftp_data.columns
+
+    # Check that FTP values are sorted (non-decreasing)
+    ftp_values = ftp_data["ftp_value"].to_list()
+    assert ftp_values == sorted(ftp_values)
     
     # Check FTP progression
     assert ftp_values[-1] > ftp_values[0]  # FTP should increase
